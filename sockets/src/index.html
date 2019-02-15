@@ -1,0 +1,34 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>App Help Desk</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+
+<body>
+    <nav class="navbar navbar-info bg-info">
+        Aps 5º Semestre
+    </nav>
+    <div class="container">
+        <h1 class="text-info">Arquivos da Aps do 5º Semestre</h1>
+        <div class="col-lg-3 col-md-12 col-sm-8">
+
+            <a class="btn btn-md btn-info btn-block" href="ClienteSocket.java" download>ClienteSocket</a><br>
+            <a class="btn btn-md btn-info btn-block" href="socket/GerenciadordeClientes.java"
+                download>GerenciadordeClientes</a>
+            <br><a class="btn btn-md btn-info btn-block" href="socket/ServidorSocket.java" download>ServidorSocket</a><br>
+            <form method="POST" action="salvar.php" enctype="multipart/form-data">
+                <input type="file" name="Arquivo" >
+                <input type="checkbox" name="haveOptions"/> Sim
+                <span></span>
+                <input type="submit" value="Enviar">
+            </form>
+
+        </div>
+    </div>
+</body>
+
+</html>
