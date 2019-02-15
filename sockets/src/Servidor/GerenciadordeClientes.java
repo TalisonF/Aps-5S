@@ -7,6 +7,9 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import org.json.*;
+
+import com.mysql.cj.xdevapi.JsonArray;
 
 
 
@@ -18,6 +21,7 @@ public class GerenciadordeClientes extends Thread{
 	private static final Map<String, GerenciadordeClientes> clientes = new HashMap<String, GerenciadordeClientes>(); 
 	private BufferedReader leitor;
 	private PrintWriter escritor;
+	private JSONObject recebi;
 	
 	public GerenciadordeClientes(Socket cliente) {
 		this.cliente = cliente;
@@ -32,30 +36,48 @@ public class GerenciadordeClientes extends Thread{
 			escritor= new PrintWriter(cliente.getOutputStream(), true);
 			escritor.println( "O servidor disse: " +"Insira seu nome: ");
 			String msg = leitor.readLine();
-			escritor.println("O servidor disse: " +"Olá " + msg);
-			this.nomeCliente = msg;
+			recebi = new JSONObject(msg);
+			escritor.println("O servidor disse: " +"Olá " + recebi.getString("mensagem"));
+			this.nomeCliente = recebi.getString("mensagem");
 			
 			clientes.put(this.nomeCliente, this);
 			
 			while(true) {
 				msg = leitor.readLine();
-				if(msg.equalsIgnoreCase("Sair")) {
+				
+				JSONObject recebi = new JSONObject(msg);
+				
+				if(recebi.getString("função").equals("logar")) {
+					
+					String nome = recebi.get("usuario").toString(); 
+					String senha = recebi.get("senha").toString(); 
+					
+					System.out.println("Usuario : " + nome + " ; senha: " + senha);
+					
+					continue;
+				
+				}
+				if(recebi.getString("função").equals("Sair")) {
 					System.out.println("O cliente " + this.nomeCliente + " saiu!");
 					this.cliente.close();
-				}else if(msg.startsWith("Msg:")){
-					String nomeDestinatario = msg.substring(4, msg.length());
+				}else if( recebi.get("função").toString().equals("MensagemFor")){
+					String nomeDestinatario = recebi.getString("destinatario");
 					GerenciadordeClientes destinatario =  clientes.get(nomeDestinatario);
 					if(destinatario == null) {
 						escritor.println("O cliente informado não existe");
 					}else {
 						escritor.println("Digite a mensagem a ser enviada para " + nomeDestinatario + ": ");
-						msg = leitor.readLine();
+						msg = recebi.getString("mensagem");
 						destinatario.getEscritor().println(this.nomeCliente + " disse: " + msg);
 					}
 					
+					continue;
 				} else {
-					escritor.println(this.nomeCliente  + " Você disse: " + msg);
+					escritor.println(this.nomeCliente  + " Você disse: " + recebi.getString("mensagem"));
+					continue;
 				}
+				
+				
 			}
 			
 			
