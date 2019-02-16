@@ -8,9 +8,8 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import org.json.*;
-
-import com.mysql.cj.xdevapi.JsonArray;
-
+import Model.UsuarioDao;
+import Model.Usuario;
 
 
 
@@ -34,49 +33,77 @@ public class GerenciadordeClientes extends Thread{
 		try {
 			leitor = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
 			escritor= new PrintWriter(cliente.getOutputStream(), true);
-			escritor.println( "O servidor disse: " +"Insira seu nome: ");
-			String msg = leitor.readLine();
-			recebi = new JSONObject(msg);
-			escritor.println("O servidor disse: " +"Olá " + recebi.getString("mensagem"));
-			this.nomeCliente = recebi.getString("mensagem");
 			
-			clientes.put(this.nomeCliente, this);
+			boolean logado = false;
+			
+			boolean UsuarioInseridoNoArray =true;
 			
 			while(true) {
-				msg = leitor.readLine();
-				
+				String msg = leitor.readLine();
 				JSONObject recebi = new JSONObject(msg);
 				
 				if(recebi.getString("função").equals("logar")) {
-					
-					String nome = recebi.get("usuario").toString(); 
-					String senha = recebi.get("senha").toString(); 
-					
-					System.out.println("Usuario : " + nome + " ; senha: " + senha);
-					
+					if(!logado) {
+						
+						String login = recebi.get("usuario").toString(); 
+						String senha = recebi.get("senha").toString(); 
+						
+						UsuarioDao newUser = new UsuarioDao();
+						newUser.setLogin(login);
+						newUser.setSenha(senha);
+						
+						if(newUser.validar()) {
+							if(UsuarioInseridoNoArray) {
+								this.nomeCliente = login;
+								clientes.put(this.nomeCliente, this);
+								UsuarioInseridoNoArray = false;
+								escritor.println("Bem vindo " + this.nomeCliente);
+								escritor.println("Para enviar mensagem basta digitar: \nEnviar");
+							}
+							logado = true;
+						}else {
+							escritor.println("Senha ou usuario incorretos !!");
+						}
+					}else {
+						escritor.println("Usuario já esta logado");
+					}
 					continue;
-				
 				}
 				if(recebi.getString("função").equals("Sair")) {
 					System.out.println("O cliente " + this.nomeCliente + " saiu!");
 					this.cliente.close();
-				}else if( recebi.get("função").toString().equals("MensagemFor")){
-					String nomeDestinatario = recebi.getString("destinatario");
-					GerenciadordeClientes destinatario =  clientes.get(nomeDestinatario);
-					if(destinatario == null) {
-						escritor.println("O cliente informado não existe");
-					}else {
-						escritor.println("Digite a mensagem a ser enviada para " + nomeDestinatario + ": ");
-						msg = recebi.getString("mensagem");
-						destinatario.getEscritor().println(this.nomeCliente + " disse: " + msg);
-					}
+				}else if(recebi.getString("função").equals("cadastrar")) {
 					
+					String nome = recebi.getString("nome");
+					String login = recebi.getString("login");
+					String senha = recebi.getString("senha");
+					
+					UsuarioDao newUser = new UsuarioDao();
+					newUser.setNome(nome);
+					newUser.setLogin(login);
+					newUser.setSenha(senha);
+					
+					newUser.salvar();
+					
+				}else if(logado) {
+					if( recebi.get("função").toString().equals("MensagemFor")){
+						String nomeDestinatario = recebi.getString("destinatario");
+						GerenciadordeClientes destinatario =  clientes.get(nomeDestinatario);
+						if(destinatario == null) {
+							escritor.println("O cliente informado não existe");
+						}else {
+							escritor.println("Digite a mensagem a ser enviada para " + nomeDestinatario + ": ");
+							msg = recebi.getString("mensagem");
+							destinatario.getEscritor().println(this.nomeCliente + " disse: " + msg);
+						}
 					continue;
-				} else {
-					escritor.println(this.nomeCliente  + " Você disse: " + recebi.getString("mensagem"));
-					continue;
+					} else {
+						escritor.println(this.nomeCliente  + " Você disse: " + recebi.getString("mensagem"));
+						continue;
+					}
+				}else {
+					escritor.println("Usuario não esta logado");
 				}
-				
 				
 			}
 			
